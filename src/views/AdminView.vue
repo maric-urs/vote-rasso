@@ -50,8 +50,8 @@ async function unlock() {
     unlocked.value = true
     toast.success(`${votes.value.length} vote(s)`)
   }
-  catch {
-    toast.error('Code incorrect')
+  catch (error) {
+    toast.error(error instanceof Error ? error.message : 'Code incorrect')
   }
 }
 
@@ -143,7 +143,7 @@ function formatDate(iso: string) {
   <div class="space-y-4">
     <h2 class="font-race text-2xl text-white neon-orange">Orga</h2>
 
-    <div v-if="!unlocked" class="panel-race space-y-3 p-4">
+    <form v-if="!unlocked" class="panel-race space-y-3 p-4" @submit.prevent="unlock">
       <Label class="text-rasso-neon">Code</Label>
       <Input
         v-model="pin"
@@ -151,11 +151,10 @@ function formatDate(iso: string) {
         inputmode="numeric"
         class="border-white/20 bg-black/40 text-white"
         placeholder="••••••"
-        autocomplete="off"
-        @keyup.enter="unlock"
+        autocomplete="current-password"
       />
-      <Button class="w-full font-race" @click="unlock">Entrer</Button>
-    </div>
+      <Button type="submit" class="w-full font-race">Entrer</Button>
+    </form>
 
     <template v-else>
       <div class="flex items-center justify-between gap-2">

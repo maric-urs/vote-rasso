@@ -28,7 +28,7 @@ const localVoted = ref<VehicleCategory[]>(getLocalVotedCategories())
 
 const normalizedPlate = computed(() => normalizePlateInput(plateInput.value))
 const plateOk = computed(() => normalizedPlate.value.length >= 4)
-const votingOpen = computed(() => status.value?.votingOpen ?? false)
+const votingOpen = computed(() => status.value?.votingOpen !== false)
 
 const votedCategories = computed(() => {
   const fromServer = status.value?.votedCategories ?? []
@@ -113,7 +113,7 @@ async function vote() {
       </button>
     </div>
 
-    <p v-if="!votingOpen" class="panel-race border-rasso-red/50 py-2 text-center text-xs font-bold uppercase text-rasso-red">
+    <p v-if="status && !status.votingOpen" class="panel-race border-rasso-red/50 py-2 text-center text-xs font-bold uppercase text-rasso-red">
       Votes clôturés
     </p>
     <div

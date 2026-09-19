@@ -31,8 +31,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (req.method === 'DELETE') {
       const body = readJsonBody<{ id?: string }>(req)
-      if (!body.id) return sendJson(res, 400, { error: 'Identifiant manquant.' })
-      const { voterId, category } = parseSubmissionId(body.id)
+      const queryId = typeof req.query.id === 'string' ? req.query.id : undefined
+      const id = body.id ?? queryId
+      if (!id) return sendJson(res, 400, { error: 'Identifiant manquant.' })
+      const { voterId, category } = parseSubmissionId(id)
       await deleteAdminVote(voterId, category)
       return sendJson(res, 200, { ok: true })
     }

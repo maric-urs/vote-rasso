@@ -23,7 +23,7 @@ export async function fetchAdminVotes(pin: string): Promise<AdminVoteRow[]> {
 }
 
 export async function deleteAdminVote(pin: string, id: string): Promise<void> {
-  const response = await fetch('/api/admin', {
+  const response = await fetch(`/api/admin?id=${encodeURIComponent(id)}`, {
     method: 'DELETE',
     headers: headers(pin),
     body: JSON.stringify({ id }),

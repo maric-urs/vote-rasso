@@ -6,10 +6,24 @@ export function sendJson(res: VercelResponse, status: number, body: unknown) {
 }
 
 export function readJsonBody<T>(req: VercelRequest): T {
-  if (typeof req.body === 'string') {
-    return JSON.parse(req.body) as T
+  try {
+    const raw = req.body as unknown
+    if (raw == null || raw === '') return {} as T
+    if (typeof raw === 'string') {
+      const text = raw.trim()
+      if (!text) return {} as T
+      return JSON.parse(text) as T
+    }
+    if (typeof Buffer !== 'undefined' && Buffer.isBuffer(raw)) {
+      const text = raw.toString('utf8').trim()
+      if (!text) return {} as T
+      return JSON.parse(text) as T
+    }
+    return raw as T
   }
-  return req.body as T
+  catch {
+    return {} as T
+  }
 }
 
 export function setCors(res: VercelResponse) {

@@ -1,4 +1,5 @@
 import { Redis } from '@upstash/redis'
+import { get as getBlob, put as putBlob } from '@vercel/blob'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { contactIndexPart, type VoterContact } from './contact.js'
@@ -15,11 +16,30 @@ interface FileStoreShape {
   contactLocks: Record<string, string>
 }
 
+const BLOB_PATH = 'rasso-votes.json'
+
 let memoryStore: FileStoreShape = {
   counts: {},
   voters: {},
   submissions: [],
   contactLocks: {},
+}
+
+function emptyStore(): FileStoreShape {
+  return { counts: {}, voters: {}, submissions: [], contactLocks: {} }
+}
+
+function normalizeStore(parsed: Partial<FileStoreShape>): FileStoreShape {
+  return {
+    counts: parsed.counts ?? {},
+    voters: parsed.voters ?? {},
+    submissions: parsed.submissions ?? [],
+    contactLocks: parsed.contactLocks ?? {},
+  }
+}
+
+function useBlobStore() {
+  return Boolean(process.env.VERCEL && process.env.BLOB_READ_WRITE_TOKEN)
 }
 
 function voteKey(category: VehicleCategory, plate: string) {
@@ -124,17 +144,38 @@ function getRedis(): Redis | null {
   return new Redis({ url, token })
 }
 
+async function readBlobStore(): Promise<FileStoreShape> {
+  const result = await getBlob(BLOB_PATH, { access: 'private', useCache: false })
+  if (!result || result.statusCode !== 200 || !result.stream) return emptyStore()
+  const text = await new Response(result.stream).text()
+  if (!text.trim()) return emptyStore()
+  return normalizeStore(JSON.parse(text) as Partial<FileStoreShape>)
+}
+
+async function writeBlobStore(data: FileStoreShape) {
+  await putBlob(BLOB_PATH, JSON.stringify(data), {
+    access: 'private',
+    addRandomSuffix: false,
+    allowOverwrite: true,
+    contentType: 'application/json',
+    cacheControlMaxAge: 60,
+  })
+}
+
+function localStorePath() {
+  if (process.env.VERCEL) return join('/tmp', 'rasso-votes.json')
+  return join(process.cwd(), '.data', 'votes.json')
+}
+
 async function readFileStore(): Promise<FileStoreShape> {
-  const path = join(process.cwd(), '.data', 'votes.json')
+  if (useBlobStore()) {
+    return readBlobStore()
+  }
+
+  const path = localStorePath()
   try {
     const raw = await readFile(path, 'utf8')
-    const parsed = JSON.parse(raw) as Partial<FileStoreShape>
-    return {
-      counts: parsed.counts ?? {},
-      voters: parsed.voters ?? {},
-      submissions: parsed.submissions ?? [],
-      contactLocks: parsed.contactLocks ?? {},
-    }
+    return normalizeStore(JSON.parse(raw) as Partial<FileStoreShape>)
   }
   catch {
     return memoryStore
@@ -143,9 +184,15 @@ async function readFileStore(): Promise<FileStoreShape> {
 
 async function writeFileStore(data: FileStoreShape) {
   memoryStore = data
-  const dir = join(process.cwd(), '.data')
+  if (useBlobStore()) {
+    await writeBlobStore(data)
+    return
+  }
+
+  const path = localStorePath()
+  const dir = join(path, '..')
   await mkdir(dir, { recursive: true })
-  await writeFile(join(dir, 'votes.json'), JSON.stringify(data, null, 2), 'utf8')
+  await writeFile(path, JSON.stringify(data, null, 2), 'utf8')
 }
 
 export class AlreadyVotedError extends Error {
