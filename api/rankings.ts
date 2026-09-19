@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { getEventStatus } from '../server/event'
-import { getRankings } from '../server/store'
-import { sendJson, setCors } from '../server/http'
+import { getEventStatus } from '../server/event.js'
+import { getRankings } from '../server/store.js'
+import { sendJson, setCors } from '../server/http.js'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   setCors(res)

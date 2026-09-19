@@ -1,11 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { assertVotingOpen, VotingClosedError } from '../server/event'
-import { isValidPlate, normalizePlate } from '../server/plates'
-import { InvalidContactError, parseVoterContact } from '../server/contact'
-import type { ContactMethod } from '../server/contact'
-import { AlreadyVotedError, ContactAlreadyUsedError, registerVote } from '../server/store'
-import type { VehicleCategory } from '../server/types'
-import { readJsonBody, sendJson, setCors } from '../server/http'
+import { assertVotingOpen, VotingClosedError } from '../server/event.js'
+import { isValidPlate, normalizePlate } from '../server/plates.js'
+import { InvalidContactError, parseVoterContact } from '../server/contact.js'
+import type { ContactMethod } from '../server/contact.js'
+import { AlreadyVotedError, ContactAlreadyUsedError, registerVote } from '../server/store.js'
+import type { VehicleCategory } from '../server/types.js'
+import { readJsonBody, sendJson, setCors } from '../server/http.js'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   setCors(res)

@@ -1,16 +1,16 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { AdminAuthError, assertAdminPin } from '../server/admin'
-import type { ContactMethod } from '../server/contact'
-import { InvalidContactError, parseVoterContact } from '../server/contact'
-import { isValidPlate, normalizePlate } from '../server/plates'
+import { AdminAuthError, assertAdminPin } from '../server/admin.js'
+import type { ContactMethod } from '../server/contact.js'
+import { InvalidContactError, parseVoterContact } from '../server/contact.js'
+import { isValidPlate, normalizePlate } from '../server/plates.js'
 import {
   deleteAdminVote,
   listAdminVotes,
   parseSubmissionId,
   updateAdminVote,
-} from '../server/store'
-import type { VehicleCategory } from '../server/types'
-import { readJsonBody, sendJson, setCors } from '../server/http'
+} from '../server/store.js'
+import type { VehicleCategory } from '../server/types.js'
+import { readJsonBody, sendJson, setCors } from '../server/http.js'
 
 function getPin(req: VercelRequest): string | undefined {
   const raw = req.headers['x-admin-pin']
